@@ -1,4 +1,5 @@
 from typing import List, Iterable
+from math import log
 
 
 class CountVectorizer:
@@ -19,6 +20,7 @@ class CountVectorizer:
         :return: матрица, где строка соответствует строке из коллекции, и для неё подсчитано число
             вхождений слов из коллекции уникальных слов.
         """
+
         dim = len(text)
         for ind, string in enumerate(text):
             words = string.lower().split()
@@ -47,87 +49,84 @@ class CountVectorizer:
         return list(self.data.keys())
 
 
-def test(ground_truth: tuple, result: tuple) -> None:
+class TfidfTransformer:
     """
-    Кривое сравнение результатов истинных результатов с тем, что выдаёт мой CountVectorizer.
-    За истинные результаты считаю выдачу sklearn.feature_extraction.text.CountVectorizer.
-    Для каждого уникального слова выводит список, где на i-ой позиции стоит True, если
-    это слово вошло в i-ый элемент коллекции равное число раз для sklearn и моей реализации.
-
-    :param ground_truth: кортеж с результатами от sklearn, где первый элемент - список из
-        уникальных слов в некоторой коллекции, второй элемент - матрица.
-    :param result: то же самое, только результаты моей реализации CountVectorizer.
+        Computes Tf-Idf matrix given count_matrix of a corpus.
     """
-    true_feature_names = ground_truth[0]
-    num_strings = len(ground_truth[1])
-    extra_array = [False for _ in range(num_strings)]
+    def tf_transform(self, count_matrix) -> List[List[float]]:
+        """
+        :param count_matrix: matrix of size (num_doc, num_unique_words), where in each row
+         stored the number of times some unique word appears in a corresponding document.
+        :return: matrix of size (num_doc, num_unique_words), where in each row stored
+         frequencies of each unique word in corresponding document.
+        """
+        tf_matrix = []
 
-    for ind, word in enumerate(true_feature_names):
-        print(f'{word}: ', end='')
-        try:
-            ind_in_result = result[0].index(word)
-            for i in range(num_strings):
-                extra_array[i] = result[1][i][ind_in_result] == ground_truth[1][i][ind]
-            print(extra_array)
-        except ValueError:
-            print('Значение не найдено в моей реализации')
-            break
+        for line in count_matrix:
+            sum_of_el = sum(line)
+            new_line = []
+            for el in line:
+                new_line.append(round(el / sum_of_el, 3))
+            tf_matrix.append(new_line)
+
+        return tf_matrix
+
+    def idf_transform(self, count_matrix: List[List[int]]) -> List[float]:
+        """
+        :param count_matrix: matrix of size (num_doc, num_unique_words), where in each row
+         stored the number of times some unique word appears in a corresponding document.
+        :return: vector of size len(unique_words), storing how rarely each unique word appears
+         in all documents (exapmle: a word that appears in each document will have 0 in a
+          corresponding place in the vector).
+        """
+        num_of_doc = len(count_matrix)
+        num_of_unique_words = len(count_matrix[0]) if num_of_doc else 0
+        idf_matrix = []
+
+        for i in range(num_of_unique_words):
+            frec_of_word = 0
+
+            for j in range(num_of_doc):
+                frec_of_word += bool(count_matrix[j][i])
+
+            res = log((num_of_doc + 1) / (frec_of_word + 1)) + 1
+            idf_matrix.append(round(res, 3))
+
+        return idf_matrix
+
+    def fit_transform(self, count_matrix) -> List[List[float]]:
+        """
+        :param count_matrix: matrix of size (num_doc, num_unique_words), where in each row
+         stored the number of times some unique word appears in a corresponding document.
+        :return: Tf-Idf matrix.
+        """
+        tf_matrix = self.tf_transform(count_matrix)
+        idf_matrix = self.idf_transform(count_matrix)
+        tfidf = []
+
+        for row in tf_matrix:
+            tfidf.append([round(tf * idf, 3) for tf, idf in zip(row, idf_matrix)])
+
+        return tfidf
+
+
+class TfidfVectorizer(CountVectorizer):
+    """
+        Computes Tf-Idf matrix for a given corpus of documents.
+    """
+    def __init__(self):
+        super().__init__()
+        self.transformer = TfidfTransformer()
+
+    def fit_transform(self, corpus) -> List[List[float]]:
+        count_matrix = super().fit_transform(corpus)
+        return self.transformer.fit_transform(count_matrix)
 
 
 if __name__ == '__main__':
-    tests = [['Crock Pot Pasta Never boil pasta again',
-              'Pasta Pomodoro Fresh ingredients Parmesan to taste'],
-             ['This is the first document',
-              'This document is the second document',
-              'And this is the third one',
-              'Is this the first document'],
-             ['Не уходи смиренно в сумрак вечной тьмы',
-              'Пусть тлеет бесконечность в яростном закате',
-              'Пылает гнев на то как гаснет смертный мир',
-              'Пусть мудрецы твердят что прав лишь тьмы покой',
-              'И не разжечь уж тлеющий костёр',
-              'Не уходи смиренно в сумрак вечной тьмы',
-              'Пылает гнев на то как гаснет смертный мир',
-              'Не гасни уходя во мрак ночной']
-             ]
+    corpus = ['Crock Pot Pasta Never boil pasta again',
+              'Pasta Pomodoro Fresh ingredients Parmesan to taste']
 
-    ground_truth = [(['again', 'boil', 'crock', 'fresh', 'ingredients', 'never',  # First test
-                      'parmesan', 'pasta', 'pomodoro', 'pot', 'taste', 'to'],
-                     [[1, 1, 1, 0, 0, 1, 0, 2, 0, 1, 0, 0],
-                      [0, 0, 0, 1, 1, 0, 1, 1, 1, 0, 1, 1]]),
-                    (['and', 'document', 'first', 'is', 'one', 'second', 'the',  # Second test
-                      'third', 'this'],
-                     [[0, 1, 1, 1, 0, 0, 1, 0, 1],
-                      [0, 2, 0, 1, 0, 1, 1, 0, 1],
-                      [1, 0, 0, 1, 1, 0, 1, 1, 1],
-                      [0, 1, 1, 1, 0, 0, 1, 0, 1]]),
-                    (['бесконечность', 'вечной', 'во', 'гаснет', 'гасни', 'гнев',  # Third test
-                      'закате', 'как', 'костёр', 'лишь', 'мир', 'мрак', 'мудрецы',
-                      'на', 'не', 'ночной', 'покой', 'прав', 'пусть', 'пылает', 'разжечь',
-                      'смертный', 'смиренно', 'сумрак', 'твердят', 'тлеет', 'тлеющий',
-                      'то', 'тьмы', 'уж', 'уходи', 'уходя', 'что', 'яростном'],
-                     [[0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0,
-                       1, 1, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0],
-                      [1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0,
-                       0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1],
-                      [0, 0, 0, 1, 0, 1, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1,
-                       0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0],
-                      [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 1, 1, 1, 0, 0, 0,
-                       0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0],
-                      [0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0,
-                       0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0],
-                      [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0,
-                       1, 1, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0],
-                      [0, 0, 0, 1, 0, 1, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1,
-                       0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0],
-                      [0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0,
-                       0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0]])]
-
-    for num in range(len(tests)):
-        print(f'Тест {num + 1}')
-        vectorizer = CountVectorizer()
-        count_matrix = vectorizer.fit_transform(tests[num])
-        result = (vectorizer.get_feature_names(), count_matrix)
-        test(ground_truth[num], result)
-        print()
-
+    vectorizer = TfidfVectorizer()
+    tfidf_matrix = vectorizer.fit_transform(corpus)
+    feature_names = vectorizer.get_feature_names()
