@@ -33,8 +33,8 @@ class ColorizeMixin:
     """
         Mixin class that changes the color of output in console.
     """
-    def change_color(self, text: str):
-        #
+    def __str__(self):
+        text = repr(self)
         color = getattr(self, 'repr_color_code', 35)
         return f'\033[{str(color)}m{text}'
 
@@ -43,7 +43,7 @@ class Advert(ColorizeMixin, JsonToObject):
     """
         Class that contains info about an item for advertisement.
     """
-    repr_color_code = 33
+    repr_color_code = 34
 
     def __init__(self, data: dict):
         super().__init__(data)
@@ -52,21 +52,20 @@ class Advert(ColorizeMixin, JsonToObject):
         assert self.price >= 0, 'Price must be non-negative!'
 
     def __repr__(self):
-        return super().change_color(f'{self.title} | {self.price} ₽')
+        return f'{self.title} | {self.price} ₽'
 
 
 if __name__ == '__main__':
     corgi_str = """{
-    "title": "Вельш-корги",
-    "price": 1000,
-    "class": "dogs",
-    "location": {
-    "address": "сельское поселение Ельдигинское, поселок санатория Тишково, 25",
-    "another_key": 1
-    }
+        "title": "Вельш-корги",
+        "price": 1000,
+        "class": "dogs",
+        "location": {
+            "address": "сельское поселение Ельдигинское, поселок санатория Тишково, 25"
+        }
     }"""
 
     corgi = json.loads(corgi_str)
     corgi_ad = Advert(corgi)
-    print(corgi_ad.location.address)
+    assert corgi_ad.location.address == "сельское поселение Ельдигинское, поселок санатория Тишково, 25"
     print(corgi_ad)
