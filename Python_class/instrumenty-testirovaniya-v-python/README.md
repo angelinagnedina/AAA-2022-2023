@@ -14,6 +14,8 @@ cd Python_class/instrumenty-testirovaniya-v-python
 python -m doctest -v -o=ELLIPSIS -o=NORMALIZE_WHITESPACE -f=tests/doctest_issue-1.py
 ```
 
+Брала 2 теста - первый хорошо отрабатывает, второй выдаёт ошибку.
+
 ## Задание 2
 
 Чтобы запустить второй тест - выполните следующую команду
@@ -21,6 +23,8 @@ python -m doctest -v -o=ELLIPSIS -o=NORMALIZE_WHITESPACE -f=tests/doctest_issue-
 ```
 python -m pytest tests/parametrize_issue-2.py
 ```
+
+Проверяла на 3 примерах, на первых 2 тест отрабатывает отлично, на последнем тесте падает - так и задумано. Этот тест подсвечивает, что decode не справляется с расстановкой пробелов.
 
 ## Задание 3
 
@@ -30,6 +34,8 @@ python -m pytest tests/parametrize_issue-2.py
 python -m unittest -v tests/test_issue-3.py
 ```
 
+Брала 4 тестовых примера, использовала методы проверки **assertEqual, assertCountEqual, assertTupleEqual**. В третьем примере перехватывала исключение при помощи **try / except** (тест выполнялся, но в консоль выводится сообщение, что что-то не в порядке).
+
 ## Задание 4
 
 Чтобы запустить четвёртый тест - выполните следующую команду
@@ -37,6 +43,8 @@ python -m unittest -v tests/test_issue-3.py
 ```
 python -m pytest tests/pytest_issue-4.py
 ```
+
+Взяла 4 теста - на третьем перехватываю **AssertionError** с помощью **with pytest.raises(AssertionError)**.
 
 ## Задание 5
 
@@ -51,3 +59,5 @@ python -m pytest -q tests/coverage_issue-5.py --cov=what_is_year_now
 ```
 python -m pytest -q tests/coverage_issue-5.py --cov=what_is_year_now --cov-report=html
 ```
+
+Тестируется 3 кейса: даты в формате YMD/DMY/произвольный формат (я брала D@M@Y). В последнем случае поднимается **ValueError**, который я ловлю конструкцией **try / except**.
