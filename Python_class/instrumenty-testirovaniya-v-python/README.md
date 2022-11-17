@@ -11,7 +11,7 @@ cd Python_class/instrumenty-testirovaniya-v-python
 Чтобы запустить первый тест - выполните следующую команду
 
 ```
-python -m doctest -v -o=ELLIPSIS -o=NORMALIZE_WHITESPACE -f=tests/doctest_issue-1.py
+python -m doctest -v -o=ELLIPSIS -o=NORMALIZE_WHITESPACE tests/doctest_issue-1.py
 ```
 
 Брала 2 теста - первый хорошо отрабатывает, второй выдаёт ошибку.
