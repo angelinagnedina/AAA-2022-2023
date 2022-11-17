@@ -7,11 +7,15 @@ Expecting:
     '... --- ...'
 ok
 Trying:
-    encode('AAA ACADEMY')
-Expected:
+    encode('@@@ ACADEMY')
+Expecting:
     '.. --. .   .. -.. -.'
-Got:
-    '.- .- .-   .- -.-. .- -.. . -- -.--'
+*******************************************************************
+Failed example:
+    encode('@@@ ACADEMY')
+Exception raised:
+    ...
+    KeyError: '@'
 1 items had no tests:
     doctest_issue-1
 *******************************************************************

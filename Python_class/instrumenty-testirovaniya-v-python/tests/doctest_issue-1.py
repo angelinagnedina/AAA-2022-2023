@@ -5,7 +5,7 @@ def check_morse_encoder(message: str) -> str:
     r"""
     >>> encode('SOS')
     '... --- ...'
-    >>> encode('AAA ACADEMY')
+    >>> encode('@@@ ACADEMY') # Будет ошибка из-за отсутствия кодировки для "@"
     '.. --. .   .. -.. -.'
     """
     return encode(message)
