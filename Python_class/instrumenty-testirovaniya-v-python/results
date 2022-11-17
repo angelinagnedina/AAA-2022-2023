@@ -1,0 +1,82 @@
+Задание 1:
+>> python -m doctest -v -o=ELLIPSIS -o=NORMALIZE_WHITESPACE -f=tests/doctest_issue-1.py
+
+Trying:
+    encode('SOS')
+Expecting:
+    '... --- ...'
+ok
+Trying:
+    encode('@@@ ACADEMY')
+Expecting:
+    '.. --. .   .. -.. -.'
+*******************************************************************
+Failed example:
+    encode('@@@ ACADEMY')
+Exception raised:
+    ...
+    KeyError: '@'
+1 items had no tests:
+    doctest_issue-1
+*******************************************************************
+1 items had failures:
+   1 of   2 in doctest_issue-1.check_morse_encoder
+2 tests in 2 items.
+1 passed and 1 failed.
+***Test Failed*** 1 failures.
+
+
+
+Задание 2:
+>> python -m pytest tests/parametrize_issue-2.py
+
+    def test_morse_decoder(morse_msg: str, decoded_msg: str) -> str:
+>       assert decode(morse_msg) == decoded_msg
+E       AssertionError: assert 'RIEMANNIANMANIFOLD' == 'RIEMANNIAN MANIFOLD'
+E         - RIEMANNIAN MANIFOLD
+E         ?           -
+E         + RIEMANNIANMANIFOLD
+
+=================== 1 failed, 2 passed in 0.05s ======================
+
+
+
+Задание 3:
+>> python -m unittest -v tests/test_issue-3.py
+
+test_1 (tests.test_issue-3.TestFitTransform) ... ok
+test_2 (tests.test_issue-3.TestFitTransform) ... ok
+test_3 (tests.test_issue-3.TestFitTransform) ...
+AssertionError in test_3: expected: [('Brodskiy', [1, 0]), ('Lermontov', [1, 0])],
+got: [('Brodskiy', [0, 1]), ('Lermontov', [1, 0])]
+ok
+test_4 (tests.test_issue-3.TestFitTransform) ... ok
+
+----------------------------------------------------------------------
+Ran 4 tests in 0.001s
+
+OK
+
+
+
+Задание 4:
+>> python -m pytest tests/pytest_issue-4.py
+
+========================= test session starts =========================
+collected 4 items
+
+tests/pytest_issue-4.py ....                                     [100%]
+
+========================= 4 passed in 0.02s ============================
+
+
+
+Задание 5:
+>> python -m pytest -q tests/coverage_issue-5.py --cov=what_is_year_now --cov-report=html
+
+...                                                               [100%]
+
+---------- coverage: platform darwin, python 3.10.7-final-0 ----------
+Coverage HTML written to dir htmlcov
+
+3 passed in 0.21s
