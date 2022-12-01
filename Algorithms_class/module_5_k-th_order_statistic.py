@@ -1,7 +1,14 @@
 from heapq import heapify, heappop
 
 
-def get_kth_element(arr: list, k: int):
+def get_kth_element(arr: list, k: int) -> int:  # O(NlogN)
+    """
+    Ищет k-ый по порядку элемент массива.
+
+    :param arr: изначальный массив,
+    :param k: порядковая статистика,
+    :return: число, соответствующее k-ой статистике.
+    """
     heapify(arr)
     el = None
 

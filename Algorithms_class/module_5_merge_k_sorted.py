@@ -1,27 +1,32 @@
 from heapq import heapify, heapreplace, heappop
 
 
-def merge_k_sorted(arrs: list) -> list:
-    res = []
-    heap = []
+def merge_k_sorted(arrs: list) -> list:  # O(n)
+    """
+    Делает слияние нескольких отсортированных массивов в один.
 
-    for arr in arrs:
-        if len(arr) > 0:
-            heap.append([arr[0], arr, 1])
+    :param arrs: массивы, которые нужно соединить,
+    :return: отсортированный массив.
+    """
+    res = []
+    heap = [(arr[0], arr, 1) for arr in arrs if len(arr) > 0]
 
     heapify(heap)
 
-    while len(heap) > 1:
-        try:
-            while True:
-                value, arr, ind = heap[0]
-                res.append(value)
-                heapreplace(heap, [arr[ind], arr, ind + 1])
-        except IndexError:
-            heappop(heap)
+    while len(heap):
+        if len(heap) == 1:
+            ind = heap[0][-1] - 1
+            res += heap[0][1][ind:]
+            break
 
-    ind = heap[0][-1] - 1
-    res += heap[0][1][ind:]
+        while True:
+            value, arr, ind = heap[0]
+            res.append(value)
+            if ind == len(arr):
+                heappop(heap)
+                break
+            else:
+                heapreplace(heap, (arr[ind], arr, ind + 1))
 
     return res
 
