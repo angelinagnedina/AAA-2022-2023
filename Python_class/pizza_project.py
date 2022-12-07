@@ -33,7 +33,7 @@ class Pizza:
 
     def dict(self):
         """Выводит ингредиенты для пиццы."""
-        print(f'Recipe for {self.pizza_name} of size {self.size}')
+        print(f'Рецепт для {self.pizza_name} размера {self.size}')
         ingredients = RECIPE[self.pizza_name]
 
         for ingredient, amount, count in ingredients:
