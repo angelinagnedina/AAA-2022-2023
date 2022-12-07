@@ -1,63 +1,117 @@
+import click
+from time import time_ns
+from typing import Any
+
+
+RECIPE = {
+    'margherita': [
+        ('tomato sauce', 100, 'ml'),
+        ('mozzarella', 300, 'g'),
+        ('tomatoes', 2, '')
+    ],
+    'pepperoni': [
+        ('tomato sauce', 80, 'ml'),
+        ('mozzarella', 100, 'g'),
+        ('pepperoni', 150, 'g')
+    ],
+    'hawaiian': [
+        ('tomato sauce', 60, 'ml'),
+        ('mozzarella', 200, 'g'),
+        ('chicken', 200, 'g'),
+        ('pineapples', 100, 'g')
+    ]
+}
+
+
 class Pizza:
-    def __init__(self, pizza_name: str = None, size: str = None):
-        # Проверка, что данная пицца данного размера есть в меню
-        if pizza_name.lower() not in ['margherita', 'pepperoni', 'hawaiian']:
-            print('There is no such pizza in the menu :(')
-        elif size not in ['L', 'XL']:
-            print('Please choose different size')
-        else:
-            self.pizza_name = pizza_name.lower()
-            self.size = size
-            # Кол-во ингредиентов сделаем зависимым от размера
-            multiplier = 1 if self.size == 'L' else 2
-
-            if self.pizza_name == 'margherita':
-                self.ingredients = dict([
-                    ('tomato sauce', f'{multiplier * 100} ml'),
-                    ('mozzarella', f'{multiplier * 300} g'),
-                    ('tomatoes', f'{multiplier * 2}')
-                ])
-
-            if self.pizza_name == 'pepperoni':
-                self.ingredients = dict([
-                    ('tomato sauce', f'{multiplier * 80} ml'),
-                    ('mozzarella', f'{multiplier * 100} g'),
-                    ('pepperoni', f'{multiplier * 150} g')
-                ])
-
-            if self.pizza_name == 'hawaiian':
-                self.ingredients = dict([
-                    ('tomato sauce', f'{multiplier * 60} ml'),
-                    ('mozzarella', f'{multiplier * 200} g'),
-                    ('chicken', f'{multiplier * 200} g'),
-                    ('pineapples', f'{multiplier * 100} g')
-                ])
+    """Класс, который содержит информацию о пицце, доступной в меню."""
+    def __init__(self, pizza_name: str, size: str):
+        self.pizza_name = pizza_name.lower()
+        self.size = size
+        # Кол-во ингредиентов сделаем зависимым от размера
+        self.multiplier = 1 if self.size == 'L' else 2
 
     def dict(self):
+        """Выводит ингредиенты для пиццы."""
         print(f'Recipe for {self.pizza_name} of size {self.size}')
+        ingredients = RECIPE[self.pizza_name]
 
-        for ingredient, amount in self.ingredients.items():
-            print(f'{ingredient}: {amount}')
+        for ingredient, amount, count in ingredients:
+            print(f'{ingredient}: {self.multiplier * amount}{count}')
 
-    def __eq__(self, other):
+    def __eq__(self, other) -> bool:
+        """Сравнивает две пиццы."""
         # Удостоверимся, что сравниваем пиццу с пиццей
         assert isinstance(other, Pizza), f'{other} is not a pizza!'
+        return self.pizza_name == other.pizza_name and self.size == other.size
 
-        # Проверим, что пиццы и размеры идентичны
-        for ingredient, amount in other.ingredients.items():
-            amount_2 = self.ingredients.get(ingredient)
-            if amount_2 is None or amount_2 != amount:
-                return False
 
-        for ingredient, amount in self.ingredients.items():
-            amount_2 = other.ingredients.get(ingredient)
-            if amount_2 is None or amount_2 != amount:
-                return False
+def log(pattern: str):
+    """Декоратор, принимающий шаблон, в который подставляется время."""
+    def decorator(func):
+        def wrapper(*args, **kwargs):
+            time_start = time_ns()
+            res = func(*args, **kwargs)
+            # Если в процессе выполнения заказа произошла ошибка -
+            # время не выводим
+            if res:
+                time_end = time_ns()
+                print(pattern.format(time_end - time_start))
+            return res
+        return wrapper
+    return decorator
 
-        return True
+
+@log('🚗 Доставили за {} c.')
+def deliver(dish: Pizza) -> bool:
+    # Отклоняем доставку, если заказ некорректный
+    return True if dish else False
+
+
+@log('‍🍳 Приготовили за {} с.')
+def cook(pizza: str, size: str) -> Any:
+    dish = None
+
+    # Не готовим пиццу, если заказ не корректный
+    if pizza.lower() not in RECIPE.keys():
+        print('Пожалуйста, выберите пиццу из меню.')
+    elif size not in ['L', 'XL']:
+        print('Пожалуйста, выберите другой размер.')
+    else:
+        dish = Pizza(pizza, size)
+
+    return dish
+
+
+@click.group()
+def cli():
+    pass
+
+
+@cli.command()
+@click.option('--delivery', default=False, is_flag=True)
+@click.argument('pizza', nargs=1)
+@click.argument('size', nargs=1, default='L')
+def order(pizza: str, size: str, delivery: bool):
+    """Готовит и доставляет пиццу."""
+    dish = cook(pizza, size)
+
+    if delivery:
+        deliver(dish)
+
+
+@cli.command()
+def menu():
+    """Выводит меню."""
+    icons = {
+        'margherita': '🧀',
+        'pepperoni': '🍕',
+        'hawaiian': '🍍'
+    }
+    for pizza, ingredients in RECIPE.items():
+        products = ', '.join([ingredient[0] for ingredient in ingredients])
+        click.echo(f'{pizza.capitalize()} {icons[pizza]}: {products}')
 
 
 if __name__ == '__main__':
-    hav = Pizza('Hawaiian', 'L')
-    hav2 = Pizza('Hawaiian', 'L')
-    print(hav == hav2)
+    cli()
