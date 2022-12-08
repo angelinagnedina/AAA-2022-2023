@@ -1,4 +1,4 @@
-from pizza_project import Pizza, deliver, cook, order, cli, log
+import pizza_project as pp
 from click.testing import CliRunner
 from unittest.mock import patch
 from io import StringIO
@@ -6,31 +6,26 @@ import sys
 
 
 def test1_pizza():
-    pizza1 = Pizza('margherita', 'L')
-    pizza2 = Pizza('margherita', 'XL')
+    pizza1 = pp.Margherita('L')
+    pizza2 = pp.Pepperoni('L')
     assert pizza1 != pizza2
 
 
 def test2_pizza():
-    pizza1 = Pizza('margherita', 'L')
-    pizza2 = Pizza('margherita', 'L')
+    pizza1 = pp.Hawaiian('L')
+    pizza2 = pp.Hawaiian('L')
     assert pizza1 == pizza2
 
 
 def test3_pizza():
-    pizza = Pizza('margherita', 'L')
-    captured_output = StringIO()
-    sys.stdout = captured_output
-    with patch.dict('pizza_project.RECIPE', {'margherita': [('tomato sauce', 50, 'ml')]}):
-        pizza.dict()
-        sys.stdout = sys.__stdout__
-        assert captured_output.getvalue() == \
-               'Рецепт для margherita размера L\ntomato sauce: 50ml\n'
+    pizza = pp.Margherita('S')
+    ingredients = pizza.dict()
+    assert ('mozzarella', '300g') in ingredients.items()
 
 
 def test_log():
     pattern = 'Какой-то шаблон {}'
-    wrapper = log(pattern)(lambda x: True)
+    wrapper = pp.log(pattern)(lambda x: True)
     captured_output = StringIO()
     sys.stdout = captured_output
     with patch('pizza_project.time_ns', return_value=1):
@@ -41,48 +36,39 @@ def test_log():
 
 
 def test_deliver():
-    dish1 = Pizza('margherita', 'L')
-    dish2 = None
-    assert deliver(dish1)
-    assert not deliver(dish2)
+    assert pp.deliver()
 
 
-def test1_cook():
-    captured_output = StringIO()
-    sys.stdout = captured_output
-    res = cook('hotdog', 'L')
-    sys.stdout = sys.__stdout__
-    assert captured_output.getvalue() == 'Пожалуйста, выберите пиццу из меню.\n'
-    assert res is None
+def test_cook():
+    dish1 = pp.cook('margherita', 'M')
+    dish2 = pp.cook('pepperoni', 'S')
+    dish3 = pp.cook('hawaiian', 'L')
+    dish4 = pp.cook('hotdog', 'M')
 
-
-def test2_cook():
-    captured_output = StringIO()
-    sys.stdout = captured_output
-    res = cook('margherita', 'X')
-    sys.stdout = sys.__stdout__
-    assert captured_output.getvalue() == 'Пожалуйста, выберите другой размер.\n'
-    assert res is None
-
-
-def test3_cook():
-    res = cook('margherita', 'L')
-    assert res == Pizza('margherita', 'L')
+    assert dish1 == pp.Margherita('M')
+    assert dish2 == pp.Pepperoni('S')
+    assert dish3 == pp.Hawaiian('L')
+    assert dish4 is None
 
 
 def test1_order():
-    result = CliRunner().invoke(order, ['margherita', 'X'])
-    assert result.output == 'Пожалуйста, выберите другой размер.\n'
+    result = CliRunner().invoke(pp.order, ['margherita', 'X'])
+    assert result.output == 'Выберите другой размер.\n'
 
 
 def test2_order():
-    result = CliRunner().invoke(order, ['margherita', 'L', '--delivery'])
+    result = CliRunner().invoke(pp.order, ['margherita', 'L', '--delivery'])
     assert '‍🍳 Приготовили за' in result.output
     assert '🚗 Доставили за' in result.output
 
 
+def test3_order():
+    result = CliRunner().invoke(pp.order, ['hotdog', 'L', '--delivery'])
+    assert result.output == 'Пожалуйста, выберите пиццу из меню.\n'
+
+
 def test_menu():
-    result = CliRunner().invoke(cli, ['menu'])
+    result = CliRunner().invoke(pp.cli, ['menu'])
     assert result.output == 'Margherita 🧀: tomato sauce, mozzarella, tomatoes\n' \
                             'Pepperoni 🍕: tomato sauce, mozzarella, pepperoni\n' \
                             'Hawaiian 🍍: tomato sauce, mozzarella, chicken, pineapples\n'
