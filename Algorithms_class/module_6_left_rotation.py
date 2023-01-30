@@ -40,19 +40,19 @@ def find_and_left_rotate(preorder_keys: list, key: int) -> list:
 
         while True:
             if el < new_root.key:
-                if new_root.left:
-                    new_root = new_root.left
-                else:
+                if new_root.left is None:
                     child = TreeNode(new_root, el)
                     new_root.left = child
                     break
+
+                new_root = new_root.left
             else:
-                if new_root.right:
-                    new_root = new_root.right
-                else:
+                if new_root.right is None:
                     child = TreeNode(new_root, el)
                     new_root.right = child
                     break
+
+                new_root = new_root.right
 
     # Ищем вершину, по которой будет происходить левое вращение
     curr_node = root
@@ -68,26 +68,19 @@ def find_and_left_rotate(preorder_keys: list, key: int) -> list:
         child = curr_node.right
         child.parent = curr_node.parent
 
-        if child.parent:
-            if child.parent.key > child.key:
-                child.parent.left = child
-            else:
-                child.parent.right = child
-        else:
+        if child.parent is None:
             root = child
-
-        if child.left:
-            curr_node.right = child.left
+        elif child.parent.key > child.key:
+            child.parent.left = child
         else:
-            curr_node.right = None
+            child.parent.right = child
 
+        curr_node.right = child.left if child.left else None
         curr_node.parent = child
         child.left = curr_node
 
-        # Обход дерева
-        return dfs(root, [])
-    else:
-        return preorder_keys
+    # Обход дерева
+    return dfs(root, [])
 
 
 def solution():
